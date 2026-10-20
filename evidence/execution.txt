@@ -1,0 +1,6 @@
+2026-10-20 16:25:50,301 INFO Run start
+2026-10-20 16:25:50,303 WARNING Data error on row 5: amount must be greater than zero
+2026-10-20 16:25:50,304 WARNING Data error on row 8: amount has an invalid Brazilian monetary format
+2026-10-20 16:25:50,304 WARNING Data error on row 10: duplicate request_id
+2026-10-20 16:25:50,304 WARNING Data error on row 11: area is required
+2026-10-20 16:25:50,305 INFO Run end: records read=12 valid=8 rejected=4 approved=5 pending=2 canceled=1

@@ -70,7 +70,9 @@ def validate_row(original):
 def write_rejections(path, rejected_rows):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=(*SOURCE_FIELDS, "reason"), delimiter=";")
+        writer = csv.DictWriter(
+            stream, fieldnames=(*SOURCE_FIELDS, "reason"), delimiter=";", lineterminator="\n"
+        )
         writer.writeheader()
         for original, reason in rejected_rows:
             writer.writerow({**{field: original.get(field) for field in SOURCE_FIELDS},
@@ -80,7 +82,9 @@ def write_rejections(path, rejected_rows):
 def write_report(path, counts, area_totals):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=REPORT_FIELDS, delimiter=";")
+        writer = csv.DictWriter(
+            stream, fieldnames=REPORT_FIELDS, delimiter=";", lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerow({"type": "TOTAL", "area": "", **counts,
                          "approved_total": f"{sum(area_totals.values(), Decimal('0')):.2f}"})
