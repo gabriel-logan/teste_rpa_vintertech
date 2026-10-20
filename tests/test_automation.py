@@ -248,6 +248,13 @@ class AutomationTestCase(unittest.TestCase):
         self.assertEqual(Decimal(str(self.stored_rows()[0]["amount"])), Decimal("10.00"))
         self.assertIn("amount", self.read_csv(self.rejections)[0]["reason"].lower())
 
+    def test_later_invalid_occurrence_of_accepted_id_is_a_duplicate(self):
+        self.write_rows([row(), row(amount="abc")])
+        self.run_successfully()
+
+        self.assert_counts(records_read=2, valid=1, rejected=1)
+        self.assertIn("duplicate", self.read_csv(self.rejections)[0]["reason"].lower())
+
     def test_repeated_run_does_not_duplicate_or_change_rows(self):
         self.run_successfully(SAMPLE)
         first_rows = self.stored_rows()

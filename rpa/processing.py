@@ -117,9 +117,11 @@ def process_batch(source, database, rejections, report, logger):
                 counts["records_read"] += 1
 
                 try:
-                    request = validate_row(original)
-                    if request["request_id"] in seen_ids:
+                    request_id = (original.get("id_solicitacao") or "").strip()
+                    if request_id in seen_ids:
                         raise ValueError("duplicate request_id")
+
+                    request = validate_row(original)
                 except ValueError as error:
                     reason = str(error)
                     rejected_rows.append((original, reason))
