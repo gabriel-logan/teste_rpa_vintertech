@@ -404,6 +404,24 @@ class AutomationTestCase(unittest.TestCase):
         self.assertIn("area", (result.stdout + result.stderr +
                        (self.log.read_text() if self.log.exists() else "")).lower())
 
+    def test_duplicate_headers_fail_before_processing_rows(self):
+        original = row()
+        original["observacao"] = "Nota"
+
+        for field in (*SOURCE_FIELDS, "observacao"):
+            with self.subTest(field=field):
+                self.write_rows(
+                    [original], fieldnames=(*SOURCE_FIELDS, "observacao", field)
+                )
+                result = self.run_batch()
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Duplicate CSV headers", result.stderr)
+                self.assertIn("Duplicate CSV headers", self.log.read_text(encoding="utf-8"))
+                self.assertEqual(self.stored_rows(), [])
+                self.assertFalse(self.rejections.exists())
+                self.assertFalse(self.report.exists())
+
     def test_invalid_utf8_fails_without_exposing_input_bytes(self):
         self.source.write_bytes(b"\xff\xfe\xfd")
         result = self.run_batch()

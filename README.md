@@ -47,7 +47,7 @@ O CSV precisa ter codificação UTF-8 (BOM aceito), separador `;` e os campos `i
 
 O limite de leitura de cada campo CSV é ajustado ao tamanho do arquivo de entrada, permitindo descrições maiores que o limite padrão de 128 KiB do Python. Campos com ponto e vírgula, aspas ou quebras de linha são aceitos quando delimitados conforme o formato CSV e também são preservados nas rejeições.
 
-Linhas com dados incorretos vão para `rejections.csv` e o processamento continua. `original_record` preserva os pares de campo e valor na ordem recebida, inclusive campos adicionais; colunas sem cabeçalho aparecem com nome `null` no JSON. Arquivo ausente, cabeçalho incompleto, codificação inválida ou falha no banco/saída encerram a execução com erro no terminal e no log, quando possível. Se o comando Python não for reconhecido, confira a instalação. Se houver erro de permissão, execute em uma pasta onde seja possível criar `output/`.
+Linhas com dados incorretos vão para `rejections.csv` e o processamento continua. `original_record` preserva os pares de campo e valor na ordem recebida, inclusive campos adicionais; colunas sem cabeçalho aparecem com nome `null` no JSON. Arquivo ausente, cabeçalho incompleto ou duplicado, codificação inválida ou falha no banco/saída encerram a execução com erro no terminal e no log, quando possível. Cabeçalhos duplicados são rejeitados antes de processar as linhas, inclusive em colunas adicionais. Se o comando Python não for reconhecido, confira a instalação. Se houver erro de permissão, execute em uma pasta onde seja possível criar `output/`.
 
 ## Fluxo do processo
 

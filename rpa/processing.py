@@ -118,7 +118,11 @@ def process_batch(source, database, rejections, report, logger):
         with source.open("r", encoding="utf-8-sig", newline="") as stream:
             csv.field_size_limit(max(csv.field_size_limit(), source.stat().st_size))
             reader = csv.DictReader(stream, delimiter=";")
-            missing = set(SOURCE_FIELDS) - set(reader.fieldnames or ())
+            headers = reader.fieldnames or ()
+            if len(headers) != len(set(headers)):
+                raise ValueError("Duplicate CSV headers are not allowed")
+
+            missing = set(SOURCE_FIELDS) - set(headers)
             if missing:
                 raise ValueError(f"Missing required headers: {', '.join(sorted(missing))}")
 
