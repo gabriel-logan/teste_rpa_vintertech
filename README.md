@@ -21,7 +21,7 @@ O arquivo fornecido deve produzir **12 lidos, 8 válidos, 4 rejeitados, 5 aprova
 | Arquivo | Conteúdo |
 |---|---|
 | `requests.sqlite` | Solicitações válidas; `schema.sql` define a tabela. |
-| `rejections.csv` | Registro original e motivo (`reason`). |
+| `rejections.csv` | Campos principais, registro original completo em `original_record` (JSON) e motivo (`reason`). |
 | `report.csv` | Contagens do lote e soma aprovada por área. |
 | `execution.log` | Início, fim, contagens e erros, sem descrições dos registros. |
 
@@ -41,7 +41,7 @@ O GitHub Actions executa os testes automaticamente em cada push e pull request. 
 
 O CSV precisa ter codificação UTF-8 (BOM aceito), separador `;` e os campos `id_solicitacao`, `data`, `area`, `descricao`, `valor` e `status`. Data deve ser `AAAA-MM-DD`; valor deve usar formato brasileiro, como `1.250,50`, e ser maior que zero. Os status aceitos são `Aprovado`, `Pendente` e `Cancelado`. Só aprovados entram na soma; todos os status válidos são salvos. Apenas a primeira ocorrência válida de cada ID é mantida. Valores monetários são tratados com `Decimal` para preservar centavos.
 
-Linhas com dados incorretos vão para `rejections.csv` e o processamento continua. Arquivo ausente, cabeçalho incompleto, codificação inválida ou falha no banco/saída encerram a execução com erro no terminal e no log, quando possível. Se o comando Python não for reconhecido, confira a instalação. Se houver erro de permissão, execute em uma pasta onde seja possível criar `output/`.
+Linhas com dados incorretos vão para `rejections.csv` e o processamento continua. `original_record` preserva os pares de campo e valor na ordem recebida, inclusive campos adicionais; colunas sem cabeçalho aparecem com nome `null` no JSON. Arquivo ausente, cabeçalho incompleto, codificação inválida ou falha no banco/saída encerram a execução com erro no terminal e no log, quando possível. Se o comando Python não for reconhecido, confira a instalação. Se houver erro de permissão, execute em uma pasta onde seja possível criar `output/`.
 
 ## Fluxo do processo
 

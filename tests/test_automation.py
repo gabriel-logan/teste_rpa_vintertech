@@ -1,5 +1,6 @@
 import csv
 from decimal import Decimal
+import json
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -135,6 +136,29 @@ class AutomationTestCase(unittest.TestCase):
         self.assertIn("area", by_id["SOL-010"]["reason"].lower())
         duplicate = next(item for item in rejected if item["id_solicitacao"] == "SOL-009")
         self.assertIn("duplic", duplicate["reason"].lower())
+
+    def test_rejections_preserve_named_and_unnamed_extra_columns(self):
+        self.source.write_text(
+            "id_solicitacao;data;area;descricao;valor;status;observacao\n"
+            "A;2026-10-01;Peças;Compra;10,00;Aprovado;Nota;CAMPO_EXTRA\n"
+            "B;2026-10-01;Peças;Compra;abc;Aprovado;Outra nota\n"
+            "C;2026-10-01;Peças;Compra;20,00;Aprovado;Válido\n",
+            encoding="utf-8-sig",
+        )
+        self.run_successfully()
+
+        self.assert_counts(records_read=3, valid=1, rejected=2)
+        rejected = self.read_csv(self.rejections)
+        first = dict(json.loads(rejected[0]["original_record"]))
+        second = dict(json.loads(rejected[1]["original_record"]))
+
+        self.assertEqual(first["observacao"], "Nota")
+        self.assertEqual(first["descricao"], "Compra")
+        self.assertEqual(first[None], ["CAMPO_EXTRA"])
+        self.assertIn("extra columns", rejected[0]["reason"])
+        self.assertEqual(second["observacao"], "Outra nota")
+        self.assertEqual(second["valor"], "abc")
+        self.assertEqual([item["request_id"] for item in self.stored_rows()], ["C"])
 
     def test_brazilian_amount_and_date_are_normalized_without_losing_cents(self):
         self.write_rows([row(amount="1.250,50", date="2026-10-02")])

@@ -1,5 +1,5 @@
-﻿id_solicitacao;data;area;descricao;valor;status;reason
-SOL-005;2026-10-03;Oficina;Compra de ferramenta;-50,00;Aprovado;amount must be greater than zero
-SOL-008;2026-10-05;Oficina;Serviço terceirizado;abc;Aprovado;amount has an invalid Brazilian monetary format
-SOL-009;2026-10-05;Vendas;Material escritório;90,00;Aprovado;duplicate request_id
-SOL-010;2026-10-06;;Compra emergencial;300,00;Aprovado;area is required
+﻿id_solicitacao;data;area;descricao;valor;status;original_record;reason
+SOL-005;2026-10-03;Oficina;Compra de ferramenta;-50,00;Aprovado;"[[""id_solicitacao"", ""SOL-005""], [""data"", ""2026-10-03""], [""area"", ""Oficina""], [""descricao"", ""Compra de ferramenta""], [""valor"", ""-50,00""], [""status"", ""Aprovado""]]";amount must be greater than zero
+SOL-008;2026-10-05;Oficina;Serviço terceirizado;abc;Aprovado;"[[""id_solicitacao"", ""SOL-008""], [""data"", ""2026-10-05""], [""area"", ""Oficina""], [""descricao"", ""Serviço terceirizado""], [""valor"", ""abc""], [""status"", ""Aprovado""]]";amount has an invalid Brazilian monetary format
+SOL-009;2026-10-05;Vendas;Material escritório;90,00;Aprovado;"[[""id_solicitacao"", ""SOL-009""], [""data"", ""2026-10-05""], [""area"", ""Vendas""], [""descricao"", ""Material escritório""], [""valor"", ""90,00""], [""status"", ""Aprovado""]]";duplicate request_id
+SOL-010;2026-10-06;;Compra emergencial;300,00;Aprovado;"[[""id_solicitacao"", ""SOL-010""], [""data"", ""2026-10-06""], [""area"", """"], [""descricao"", ""Compra emergencial""], [""valor"", ""300,00""], [""status"", ""Aprovado""]]";area is required

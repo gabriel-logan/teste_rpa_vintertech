@@ -1,6 +1,7 @@
 import csv
 from datetime import date
 from decimal import Decimal, InvalidOperation
+import json
 from pathlib import Path
 import re
 import sqlite3
@@ -71,11 +72,15 @@ def write_rejections(path, rejected_rows):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.DictWriter(
-            stream, fieldnames=(*SOURCE_FIELDS, "reason"), delimiter=";", lineterminator="\n"
+            stream, fieldnames=(*SOURCE_FIELDS, "original_record", "reason"),
+            delimiter=";", lineterminator="\n"
         )
         writer.writeheader()
         for original, reason in rejected_rows:
             writer.writerow({**{field: original.get(field) for field in SOURCE_FIELDS},
+                             "original_record": json.dumps(
+                                 list(original.items()), ensure_ascii=False
+                             ),
                              "reason": reason})
 
 
