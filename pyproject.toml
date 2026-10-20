@@ -1,0 +1,6 @@
+[project]
+name = "rpa-vintertech"
+version = "1.0.0"
+description = "CSV request processing for the Vintertech RPA challenge"
+requires-python = ">=3.10"
+dependencies = []
