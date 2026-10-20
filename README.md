@@ -1,92 +1,79 @@
-# Vintertech RPA challenge
+# Automação de solicitações — desafio Vintertech
 
-This Python application processes administrative requests from the supplied CSV, validates them, stores accepted requests in SQLite, and writes a rejection file and an execution report. It runs locally and uses only the Python standard library.
+Lê o CSV fornecido, valida as solicitações, salva as válidas em SQLite e gera rejeições, relatório e log. Usa apenas a biblioteca padrão do Python; não precisa de credenciais nem de acesso a sistemas externos.
 
-## Installation
+## Como executar
 
-Use Python 3.10 or newer. No third-party packages or credentials are required. Clone the repository and run the commands below from its root. Dependencies and the supported Python version are declared in `pyproject.toml`.
-
-## Run
+Instale Python **3.10 ou superior**. No terminal, execute:
 
 ```bash
+git clone https://github.com/gabriel-logan/teste_rpa_vintertech.git
+cd teste_rpa_vintertech
 python3 -m rpa
 ```
 
-The default input is `data/dados_teste_rpa.csv`. The command creates `output/requests.sqlite`, `output/rejections.csv`, `output/report.csv`, and `output/execution.log`. The input is UTF-8 with an optional BOM and uses semicolons.
+No Windows, substitua `python3` por `py` nos comandos. Execute dentro da pasta do repositório. Não é necessário instalar pacotes (`pyproject.toml` declara as dependências). Para usar outro CSV: `python3 -m rpa --input caminho/arquivo.csv`. Veja os demais caminhos com `python3 -m rpa --help`.
 
-To choose paths explicitly:
+O arquivo fornecido deve produzir **12 lidos, 8 válidos, 4 rejeitados, 5 aprovados, 2 pendentes e 1 cancelado**, com total aprovado de **3.470,00**. Os arquivos aparecem em `output/`:
 
-```bash
-python3 -m rpa \
-  --input data/dados_teste_rpa.csv \
-  --db output/requests.sqlite \
-  --rejections output/rejections.csv \
-  --report output/report.csv \
-  --log output/execution.log
-```
+| Arquivo | Conteúdo |
+|---|---|
+| `requests.sqlite` | Solicitações válidas; `schema.sql` define a tabela. |
+| `rejections.csv` | Registro original e motivo (`reason`). |
+| `report.csv` | Contagens do lote e soma aprovada por área. |
+| `execution.log` | Início, fim, contagens e erros, sem descrições dos registros. |
 
-Each output path is a file; missing parent directories are created. The command exits with a nonzero status for missing input, missing required CSV headers, unreadable data, or unavailable output storage. It reports the failure on stderr and in the log when logging is available. A data error in an individual row does not stop the batch.
+Exemplos gerados com o CSV fornecido estão em `evidence/`.
 
-## Output contract and decisions
-
-The required input headers are `id_solicitacao`, `data`, `area`, `descricao`, `valor`, and `status`. They are preserved in the rejection CSV, alongside an English `reason` column. Output CSVs also use semicolons and UTF-8 with BOM, so they open cleanly in common spreadsheet tools.
-
-Dates must be real dates in `YYYY-MM-DD` form. Brazilian amounts such as `350,00` and `1.250,50` are parsed with `Decimal`; zero, negative, malformed, and empty values are rejected. Whitespace-only required fields are empty. Only `Aprovado`, `Pendente`, and `Cancelado` are accepted as statuses. Valid pending and canceled requests remain in SQLite; only approved amounts contribute to financial totals.
-
-Only the first **valid** occurrence of a request ID in an input batch is accepted. Later occurrences are written as duplicates; an invalid row does not reserve its ID. The SQLite `requests.request_id` primary key and `ON CONFLICT DO NOTHING` provide idempotency across executions. An existing request is never overwritten by a later batch. The report and rejection file describe the current input batch, including a repeat run; the database retains previously accepted rows. Database writes run in a transaction and roll back if batch processing fails.
-
-The report contains one `TOTAL` row with `records_read`, `valid`, `rejected`, `approved`, `pending`, `canceled`, and `approved_total`. It also contains one `AREA` row per area seen in valid input, with its approved amount. Amounts in the database and report are decimal text with two fractional digits to avoid binary floating-point rounding. The `schema.sql` script defines the table and its unique key.
-
-Logs record start, end, counts, row numbers, and error categories without logging descriptions or monetary values. Input validation failures are data errors; file, encoding, and SQLite failures are infrastructure errors. The `evidence/` directory contains generated sample outputs and an execution log from the supplied CSV.
-
-## Test
+## Como testar
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-The test suite covers the supplied file, each required field, money and date validation, status handling, duplicate IDs, approved totals by area, an empty file, malformed headers, missing input, unavailable database, logs, and rerunning the same batch. Tests use temporary directories and do not change the sample data.
+Os testes usam arquivos temporários. Para conferir a idempotência manualmente, rode `python3 -m rpa` duas vezes: o banco continuará com **8** solicitações. O relatório sempre descreve o lote executado; dados já salvos não são sobrescritos.
 
-## Process mapping
+## Regras e possíveis erros
 
-**AS-IS:** An operator receives a CSV, manually checks fields and amounts, compares request IDs with previous entries, enters accepted requests in a register, records rejected requests, and builds a summary report. Manual validation and repeated entry can miss errors or create duplicates.
+O CSV precisa ter codificação UTF-8 (BOM aceito), separador `;` e os campos `id_solicitacao`, `data`, `area`, `descricao`, `valor` e `status`. Data deve ser `AAAA-MM-DD`; valor deve usar formato brasileiro, como `1.250,50`, e ser maior que zero. Os status aceitos são `Aprovado`, `Pendente` e `Cancelado`. Só aprovados entram na soma; todos os status válidos são salvos. Apenas a primeira ocorrência válida de cada ID é mantida. Valores monetários são tratados com `Decimal` para preservar centavos.
 
-**TO-BE:** The application reads the CSV, validates each row, records data errors, checks for duplicates, writes accepted requests to SQLite, and produces the report. A file or database exception stops the run, logs the error, and returns a failure status for operational follow-up.
+Linhas com dados incorretos vão para `rejections.csv` e o processamento continua. Arquivo ausente, cabeçalho incompleto, codificação inválida ou falha no banco/saída encerram a execução com erro no terminal e no log, quando possível. Se o comando Python não for reconhecido, confira a instalação. Se houver erro de permissão, execute em uma pasta onde seja possível criar `output/`.
+
+## Fluxo do processo
+
+**AS-IS:** recebimento do CSV, conferência manual, lançamento dos pedidos e montagem do relatório.
+
+**TO-BE:** leitura automática, validação, registro das rejeições, persistência sem duplicação e relatório; exceções de infraestrutura encerram a execução.
 
 ```mermaid
 flowchart TD
-    A[Receive CSV] --> B{Can open and read headers?}
-    B -- No --> X[Log infrastructure error and stop]
-    B -- Yes --> C[Read next row]
-    C --> D{Required fields, date, amount, status valid?}
-    D -- No --> E[Record original row and reason]
-    D -- Yes --> F{Valid ID already seen in this batch?}
-    F -- Yes --> E
-    F -- No --> G[Insert in SQLite if ID is new]
-    E --> H{More rows?}
-    G --> H
-    H -- Yes --> C
-    H -- No --> I{Can write outputs and commit?}
-    I -- No --> X
-    I -- Yes --> J[Log counts and finish]
+    A[Receber CSV] --> B{Arquivo e cabeçalho válidos?}
+    B -- Não --> X[Registrar erro e encerrar]
+    B -- Sim --> C[Validar linha]
+    C --> D{Dados válidos e ID novo?}
+    D -- Não --> E[Registrar rejeição e motivo]
+    D -- Sim --> F[Salvar no SQLite]
+    E --> G{Há mais linhas?}
+    F --> G
+    G -- Sim --> C
+    G -- Não --> H[Gerar relatório e log]
+    H --> I{Falha de infraestrutura?}
+    I -- Sim --> X
+    I -- Não --> J[Concluir]
 ```
 
-## Technical questions
+## Perguntas técnicas
 
-1. **How is duplicate entry prevented?** The in-memory set detects later valid occurrences in the same file. The SQLite primary key enforces uniqueness across runs and keeps the first stored value, even if another process tries to insert it.
-2. **How are data and infrastructure errors distinguished?** A row with invalid content is rejected with its original values and a reason, while the batch continues. A missing input, malformed header, encoding failure, or unavailable database fails the run with a nonzero exit code and an error log.
-3. **When use an API instead of interface RPA?** Use a documented, authorized API when it exposes the needed data and operations: structured responses and stable contracts are easier to validate than browser screens. Use interface automation only when no suitable API exists or the process requires the UI.
-4. **How would credentials be protected?** Retrieve them at runtime from a secret manager or protected environment, grant the smallest required permissions, rotate them, and never put them in source, CSV outputs, logs, or screenshots.
-5. **Which production indicators matter?** Monitor run success rate, duration, records read, valid and rejected counts, rejection reasons, duplicate rates, approved totals by area, and time since the last successful run. Alert on abnormal failure or volume changes.
+1. **Como evitar lançamento duplicado?** IDs repetidos no lote são identificados; a chave única no SQLite garante idempotência entre execuções.
+2. **Dado ou infraestrutura?** Dado inválido rejeita só a linha. Falha de arquivo, codificação ou banco encerra o lote com erro.
+3. **API ou interface?** Prefiro API documentada quando disponível; uso RPA pela interface se o processo depender dela.
+4. **Credenciais?** Usaria um gerenciador de segredos, acesso mínimo e rotação, nunca código ou logs.
+5. **Indicadores?** Sucesso, duração, volume, rejeições, duplicados, valores por área e tempo desde a última execução.
 
-## Technical discussion
+## Discussão técnica
 
-To ingest requests from a web portal, I would first check for an authorized API or export endpoint. If the portal only offers a UI, a browser automation would authenticate using a protected credential source, wait for explicit page states, download or extract a batch, and pass it to the same validation and persistence flow. The portal adapter would keep source access separate from the CSV processing rules.
+Para buscar dados em um portal, verificaria primeiro uma API autorizada; sem API, usaria automação de navegador para obter o lote e reutilizaria esta validação. Em indisponibilidade, registraria a falha, tentaria novamente com espera crescente e alertaria após tentativas limitadas. A chave única permite reprocessar com segurança. Um agendador, como cron, executaria o comando periodicamente, com alerta por código de saída e controle para evitar execuções simultâneas.
 
-For an outage, I would record a run-level infrastructure error and avoid marking unseen requests as processed. Limited retries with backoff would handle transient timeouts; repeated failures would trigger an alert. The unique database key would prevent duplicate inserts after recovery. An operator could rerun the same batch safely and inspect the log and rejection file.
+## Uso de IA
 
-A scheduler such as cron or a managed job runner could launch the command on a fixed schedule. Each run should have an isolated log, observable exit status, and a lock or orchestration rule to prevent overlapping jobs. Monitoring would track success, duration, input age, row counts, and rejection trends.
-
-## AI usage
-
-AI assisted with drafting the test suite, implementation, and README. The behavior was checked by running the automated tests and processing the supplied CSV; generated examples in `evidence/` come from that run.
+IA auxiliou na elaboração dos testes, do código e deste README. O resultado foi conferido com os testes automatizados e com a execução do CSV fornecido.

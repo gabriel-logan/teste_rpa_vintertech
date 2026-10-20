@@ -44,37 +44,37 @@ class DeliverablesTestCase(unittest.TestCase):
 
     def test_readme_explains_installation_execution_tests_and_decisions(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-        for concept in ("install", "run", "test", "decision", "python"):
+        for concept in ("instal", "execut", "test", "regras", "python"):
             with self.subTest(concept=concept):
                 self.assertIn(concept, readme)
 
     def test_readme_answers_five_technical_questions(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-        for concept in ("idempoten", "infrastructure", "api", "credential", "indicator"):
+        for concept in ("idempot", "infraestrutura", "api", "credenciais", "indicadores"):
             with self.subTest(concept=concept):
                 self.assertIn(concept, readme)
 
     def test_readme_describes_current_and_future_flows_with_decisions(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-        for concept in ("as-is", "to-be", "manual", "validat", "exception"):
+        for concept in ("as-is", "to-be", "manual", "valid", "erro"):
             with self.subTest(concept=concept):
                 self.assertIn(concept, readme)
         self.assertRegex(readme, r"(?:```mermaid|bpmn|draw\.io)")
 
     def test_readme_discusses_portal_outages_and_scheduling(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-        for concept in ("portal", "outage", "schedul"):
+        for concept in ("portal", "indisponibilidade", "agendador"):
             with self.subTest(concept=concept):
                 self.assertIn(concept, readme)
 
-        discussion = re.search(r"(?im)^#{1,3}.*technical discussion.*$", readme)
+        discussion = re.search(r"(?im)^#{1,3}.*discussão técnica.*$", readme)
         self.assertIsNotNone(discussion, "Include a technical discussion section in README")
         section = readme[discussion.end():].split("\n#", 1)[0]
         self.assertLessEqual(len(section.split()), 500, "Technical discussion must fit on one page")
 
     def test_readme_discloses_ai_usage(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-        self.assertRegex(readme, r"(?:artificial intelligence|\bai\b)")
+        self.assertRegex(readme, r"(?:inteligência artificial|\bia\b)")
         self.assertIn("test", readme)
 
     def test_execution_evidence_is_available(self):
