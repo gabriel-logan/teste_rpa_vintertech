@@ -77,8 +77,12 @@ class AutomationTestCase(unittest.TestCase):
         return result
 
     def read_csv(self, path):
-        with path.open(encoding="utf-8-sig", newline="") as stream:
-            return list(csv.DictReader(stream, delimiter=";"))
+        previous_limit = csv.field_size_limit(max(csv.field_size_limit(), path.stat().st_size))
+        try:
+            with path.open(encoding="utf-8-sig", newline="") as stream:
+                return list(csv.DictReader(stream, delimiter=";"))
+        finally:
+            csv.field_size_limit(previous_limit)
 
     def stored_rows(self):
         with sqlite3.connect(self.database) as connection:
@@ -185,6 +189,38 @@ class AutomationTestCase(unittest.TestCase):
         area = next(item for item in self.read_csv(self.report) if item["type"] == "AREA")
         self.assertEqual(Decimal(area["approved_total"]), Decimal("10.01"))
 
+    def test_large_description_is_preserved_and_following_rows_are_processed(self):
+        description = 'Compra; "material"\n' + "ç" * 131073
+        self.write_rows([
+            row(request_id="A", amount="10,00"),
+            row(request_id="B", description=description, amount="20,00"),
+            row(request_id="C", amount="30,00"),
+        ])
+        self.run_successfully()
+
+        self.assert_counts(records_read=3, valid=3, rejected=0, approved=3)
+        stored = {item["request_id"]: item for item in self.stored_rows()}
+        self.assertEqual(stored["B"]["description"], description)
+        self.assertEqual(self.read_csv(self.report)[0]["approved_total"], "60.00")
+
+    def test_large_rejected_record_is_preserved_without_stopping_batch(self):
+        description = 'Compra; "material"\n' + "ç" * 131073
+        self.write_rows([
+            row(request_id="A", amount="10,00"),
+            row(request_id="B", description=description, amount="abc"),
+            row(request_id="C", amount="30,00"),
+        ])
+        self.run_successfully()
+
+        self.assert_counts(records_read=3, valid=2, rejected=1, approved=2)
+        rejected = self.read_csv(self.rejections)
+        self.assertEqual(rejected[0]["descricao"], description)
+        self.assertEqual(dict(json.loads(rejected[0]["original_record"]))["descricao"],
+                         description)
+        self.assertIn("amount", rejected[0]["reason"])
+        self.assertEqual(self.read_csv(self.report)[0]["approved_total"], "40.00")
+        self.assertNotIn(description, self.log.read_text(encoding="utf-8"))
+
     def test_empty_input_produces_zero_counts(self):
         self.write_rows([])
         self.run_successfully()
@@ -287,7 +323,11 @@ class AutomationTestCase(unittest.TestCase):
 
         self.assertEqual(self.stored_rows(), first_rows)
         self.assertEqual(len(first_rows), 8)
-        self.assert_counts(records_read=12, valid=8, rejected=4)
+        self.assert_counts(records_read=12, valid=0, rejected=12,
+                           approved=0, pending=0, canceled=0)
+        rejected = self.read_csv(self.rejections)
+        self.assertEqual(sum("duplicate" in item["reason"] for item in rejected), 9)
+        self.assertEqual(self.read_csv(self.report)[0]["approved_total"], "0.00")
 
     def test_successive_batches_keep_existing_rows_and_insert_new_ones(self):
         self.write_rows([row(amount="10,00")])
@@ -299,6 +339,28 @@ class AutomationTestCase(unittest.TestCase):
         stored = {item["request_id"]: item for item in self.stored_rows()}
         self.assertEqual(set(stored), {"SOL-100", "SOL-101"})
         self.assertEqual(Decimal(str(stored["SOL-100"]["amount"])), Decimal("10.00"))
+        self.assert_counts(records_read=2, valid=1, rejected=1,
+                           approved=1, pending=0, canceled=0)
+        rejected = self.read_csv(self.rejections)
+        self.assertEqual(rejected[0]["id_solicitacao"], "SOL-100")
+        self.assertEqual(rejected[0]["valor"], "99,00")
+        self.assertIn("duplicate", rejected[0]["reason"])
+        self.assertEqual(self.read_csv(self.report)[0]["approved_total"], "100.50")
+
+    def test_existing_identifier_with_changed_status_is_rejected_as_duplicate(self):
+        self.write_rows([row(amount="10,00")])
+        self.run_successfully()
+
+        self.write_rows([row(amount="abc", status="Cancelado")])
+        self.run_successfully()
+
+        stored = self.stored_rows()[0]
+        self.assertEqual(stored["amount"], "10.00")
+        self.assertEqual(stored["status"], "Aprovado")
+        self.assert_counts(records_read=1, valid=0, rejected=1,
+                           approved=0, pending=0, canceled=0)
+        self.assertIn("duplicate", self.read_csv(self.rejections)[0]["reason"])
+        self.assertEqual(self.read_csv(self.report)[0]["approved_total"], "0.00")
 
     def test_areas_receive_independent_approved_totals(self):
         self.write_rows([

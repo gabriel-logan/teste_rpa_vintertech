@@ -1,6 +1,20 @@
-2026-10-20 16:25:50,301 INFO Run start
-2026-10-20 16:25:50,303 WARNING Data error on row 5: amount must be greater than zero
-2026-10-20 16:25:50,304 WARNING Data error on row 8: amount has an invalid Brazilian monetary format
-2026-10-20 16:25:50,304 WARNING Data error on row 10: duplicate request_id
-2026-10-20 16:25:50,304 WARNING Data error on row 11: area is required
-2026-10-20 16:25:50,305 INFO Run end: records read=12 valid=8 rejected=4 approved=5 pending=2 canceled=1
+2026-10-20 16:42:42,528 INFO Run start
+2026-10-20 16:42:42,540 WARNING Data error on row 5: amount must be greater than zero
+2026-10-20 16:42:42,540 WARNING Data error on row 8: amount has an invalid Brazilian monetary format
+2026-10-20 16:42:42,541 WARNING Data error on row 10: duplicate request_id
+2026-10-20 16:42:42,541 WARNING Data error on row 11: area is required
+2026-10-20 16:42:42,544 INFO Run end: records read=12 valid=8 rejected=4 approved=5 pending=2 canceled=1
+2026-10-20 16:42:42,605 INFO Run start
+2026-10-20 16:42:42,606 WARNING Data error on row 1: duplicate request_id
+2026-10-20 16:42:42,606 WARNING Data error on row 2: duplicate request_id
+2026-10-20 16:42:42,606 WARNING Data error on row 3: duplicate request_id
+2026-10-20 16:42:42,606 WARNING Data error on row 4: duplicate request_id
+2026-10-20 16:42:42,606 WARNING Data error on row 5: amount must be greater than zero
+2026-10-20 16:42:42,606 WARNING Data error on row 6: duplicate request_id
+2026-10-20 16:42:42,606 WARNING Data error on row 7: duplicate request_id
+2026-10-20 16:42:42,607 WARNING Data error on row 8: amount has an invalid Brazilian monetary format
+2026-10-20 16:42:42,607 WARNING Data error on row 9: duplicate request_id
+2026-10-20 16:42:42,607 WARNING Data error on row 10: duplicate request_id
+2026-10-20 16:42:42,607 WARNING Data error on row 11: area is required
+2026-10-20 16:42:42,607 WARNING Data error on row 12: duplicate request_id
+2026-10-20 16:42:42,607 INFO Run end: records read=12 valid=0 rejected=12 approved=0 pending=0 canceled=0

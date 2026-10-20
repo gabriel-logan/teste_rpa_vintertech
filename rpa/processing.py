@@ -110,13 +110,13 @@ def process_batch(source, database, rejections, report, logger):
     }
     area_totals = {}
     rejected_rows = []
-    seen_ids = set()
 
     database.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(database) as connection:
         connection.executescript(SCHEMA.read_text(encoding="utf-8"))
 
         with source.open("r", encoding="utf-8-sig", newline="") as stream:
+            csv.field_size_limit(max(csv.field_size_limit(), source.stat().st_size))
             reader = csv.DictReader(stream, delimiter=";")
             missing = set(SOURCE_FIELDS) - set(reader.fieldnames or ())
             if missing:
@@ -127,10 +127,22 @@ def process_batch(source, database, rejections, report, logger):
 
                 try:
                     request_id = (original.get("id_solicitacao") or "").strip()
-                    if request_id in seen_ids:
+                    existing = connection.execute(
+                        "SELECT 1 FROM requests WHERE request_id = ?", (request_id,)
+                    ).fetchone()
+                    if existing:
                         raise ValueError("duplicate request_id")
 
                     request = validate_row(original)
+                    inserted = connection.execute(
+                        "INSERT INTO requests "
+                        "(request_id, date, area, description, amount, status) "
+                        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(request_id) DO NOTHING",
+                        (request["request_id"], request["date"], request["area"],
+                         request["description"], f"{request['amount']:.2f}", request["status"]),
+                    )
+                    if inserted.rowcount == 0:
+                        raise ValueError("duplicate request_id")
                 except ValueError as error:
                     reason = str(error)
                     rejected_rows.append((original, reason))
@@ -138,7 +150,6 @@ def process_batch(source, database, rejections, report, logger):
                     logger.warning("Data error on row %s: %s", counts["records_read"], reason)
                     continue
 
-                seen_ids.add(request["request_id"])
                 counts["valid"] += 1
                 status_name = {
                     "Aprovado": "approved", "Pendente": "pending", "Cancelado": "canceled"
@@ -149,13 +160,6 @@ def process_batch(source, database, rejections, report, logger):
                 area_totals.setdefault(area, Decimal("0"))
                 if request["status"] == "Aprovado":
                     area_totals[area] += request["amount"]
-
-                connection.execute(
-                    "INSERT INTO requests (request_id, date, area, description, amount, status) "
-                    "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(request_id) DO NOTHING",
-                    (request["request_id"], request["date"], area, request["description"],
-                     f"{request['amount']:.2f}", request["status"]),
-                )
 
         write_rejections(rejections, rejected_rows)
         write_report(report, counts, area_totals)
