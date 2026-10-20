@@ -8,7 +8,10 @@ from .processing import process_batch
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Process administrative requests from a CSV file")
+    parser = argparse.ArgumentParser(
+        prog="python3 -m rpa",
+        description="Process administrative requests from a CSV file",
+    )
     parser.add_argument("--input", type=Path, default=Path("data/dados_teste_rpa.csv"))
     parser.add_argument("--db", type=Path, default=Path("output/requests.sqlite"))
     parser.add_argument("--rejections", type=Path, default=Path("output/rejections.csv"))
@@ -16,19 +19,27 @@ def main():
     parser.add_argument("--log", type=Path, default=Path("output/execution.log"))
     args = parser.parse_args()
 
-    args.log.parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(
-        filename=args.log,
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
-        encoding="utf-8",
-    )
+    try:
+        args.log.parent.mkdir(parents=True, exist_ok=True)
+        logging.basicConfig(
+            filename=args.log,
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s %(message)s",
+            encoding="utf-8",
+        )
+    except OSError as error:
+        parser.exit(1, f"Error: cannot initialize log: {error}\n")
+
     logger = logging.getLogger("rpa")
     logger.info("Run start")
 
     try:
         process_batch(args.input, args.db, args.rejections, args.report, logger)
-    except (OSError, ValueError, UnicodeError, csv.Error, sqlite3.Error) as error:
+    except UnicodeError:
+        logger.error("Run error: input encoding is not UTF-8")
+        logger.info("Run end with error")
+        parser.exit(1, "Error: input encoding is not UTF-8\n")
+    except (OSError, ValueError, csv.Error, sqlite3.Error) as error:
         logger.error("Run error: %s", error)
         logger.info("Run end with error")
         parser.exit(1, f"Error: {error}\n")

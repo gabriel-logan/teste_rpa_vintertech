@@ -311,6 +311,14 @@ class AutomationTestCase(unittest.TestCase):
         self.assertIn("area", (result.stdout + result.stderr +
                        (self.log.read_text() if self.log.exists() else "")).lower())
 
+    def test_invalid_utf8_fails_without_exposing_input_bytes(self):
+        self.source.write_bytes(b"\xff\xfe\xfd")
+        result = self.run_batch()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("encoding", result.stderr.lower())
+        self.assertNotIn("\\xff", self.log.read_text(encoding="utf-8"))
+
     def test_unavailable_database_is_an_infrastructure_error(self):
         self.write_rows([row()])
         self.database.mkdir()
@@ -322,6 +330,15 @@ class AutomationTestCase(unittest.TestCase):
                              "Infrastructure failures are not data rejections")
         self.assertIn("error", (result.stdout + result.stderr +
                        (self.log.read_text() if self.log.exists() else "")).lower())
+
+    def test_unavailable_report_rolls_back_database_writes(self):
+        self.write_rows([row()])
+        self.report.mkdir()
+        result = self.run_batch()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.stored_rows(), [])
+        self.assertIn("error", self.log.read_text(encoding="utf-8").lower())
 
     def test_logs_record_start_end_counts_and_hide_sensitive_description(self):
         sensitive = "SENSITIVE_DESCRIPTION_123"
