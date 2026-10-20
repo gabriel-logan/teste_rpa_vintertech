@@ -31,7 +31,7 @@ Na primeira execução, com banco vazio, o arquivo fornecido deve produzir **12 
 | `report.csv` | Contagens do lote e soma aprovada por área. |
 | `execution.log` | Início, fim, contagens e erros, sem descrições dos registros. |
 
-As evidências geradas com o CSV fornecido estão em `evidence/`. Os arquivos `2026-10-20_16-42-42-528_initial-processing_report.csv` e `2026-10-20_16-42-42-528_initial-processing_rejections.csv` registram o processamento inicial. Os arquivos `2026-10-20_16-42-42-605_idempotency-validation_report.csv` e `2026-10-20_16-42-42-605_idempotency-validation_rejections.csv` registram a validação de idempotência no mesmo banco. O arquivo `execution.txt` contém o log geral das duas execuções.
+As evidências geradas com o CSV fornecido estão em `evidence/`. Os arquivos `2026-10-20_17-26-45-158_initial-processing_report.csv` e `2026-10-20_17-26-45-158_initial-processing_rejections.csv` registram o processamento inicial. Os arquivos `2026-10-20_17-27-20-680_idempotency-validation_report.csv` e `2026-10-20_17-27-20-680_idempotency-validation_rejections.csv` registram a validação de idempotência no mesmo banco. O arquivo `execution.txt` contém o log geral das duas execuções.
 
 ## Como testar
 
