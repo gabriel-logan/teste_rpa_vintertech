@@ -1,5 +1,7 @@
 # Automação de solicitações — desafio Vintertech
 
+[![CI e entrega](https://github.com/gabriel-logan/teste_rpa_vintertech/actions/workflows/ci.yml/badge.svg)](https://github.com/gabriel-logan/teste_rpa_vintertech/actions/workflows/ci.yml)
+
 Lê o CSV fornecido, valida as solicitações, salva as válidas em SQLite e gera rejeições, relatório e log. Usa apenas a biblioteca padrão do Python; não precisa de credenciais nem de acesso a sistemas externos.
 
 ## Como executar
@@ -32,6 +34,8 @@ python3 -m unittest discover -s tests -v
 ```
 
 Os testes usam arquivos temporários. Para conferir a idempotência manualmente, rode `python3 -m rpa` duas vezes: o banco continuará com **8** solicitações. O relatório sempre descreve o lote executado; dados já salvos não são sobrescritos.
+
+O GitHub Actions executa os testes automaticamente em cada push e pull request. Após um push em `main` bem-sucedido, o pacote fica disponível na aba **Actions**, em **Artifacts** da execução, por 14 dias.
 
 ## Regras e possíveis erros
 
