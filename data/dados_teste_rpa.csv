@@ -1,0 +1,13 @@
+﻿id_solicitacao;data;area;descricao;valor;status
+SOL-001;2026-10-01;Peças;Compra de material;350,00;Aprovado
+SOL-002;2026-10-02;Oficina;Reparo equipamento;1.250,50;Pendente
+SOL-003;2026-10-02;Vendas;Material escritório;180,00;Aprovado
+SOL-004;2026-10-03;Peças;Reposição estoque;2.100,00;Aprovado
+SOL-005;2026-10-03;Oficina;Compra de ferramenta;-50,00;Aprovado
+SOL-006;2026-10-04;Vendas;Material promocional;400,00;Cancelado
+SOL-007;2026-10-04;Peças;Reposição estoque;750,00;Aprovado
+SOL-008;2026-10-05;Oficina;Serviço terceirizado;abc;Aprovado
+SOL-009;2026-10-05;Vendas;Material escritório;90,00;Aprovado
+SOL-009;2026-10-05;Vendas;Material escritório;90,00;Aprovado
+SOL-010;2026-10-06;;Compra emergencial;300,00;Aprovado
+SOL-011;2026-10-06;Peças;Compra de peças;1.500,00;Pendente
