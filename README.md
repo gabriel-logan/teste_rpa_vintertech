@@ -4,6 +4,12 @@
 
 Lê o CSV fornecido, valida as solicitações, salva as válidas em SQLite e gera rejeições, relatório e log. Usa apenas a biblioteca padrão do Python; não precisa de credenciais nem de acesso a sistemas externos.
 
+## Status da entrega
+
+**Concluído em 20/10/2026.** Os requisitos obrigatórios do desafio, incluindo as etapas A–F, foram conferidos. Os 37 testes automatizados passaram com Python 3.12.3, usando `python3 -m unittest discover -s tests -v`.
+
+A execução do CSV em banco temporário vazio confirmou 12 registros lidos, 8 válidos, 4 rejeitados e R$ 3.470,00 aprovados. A reexecução manteve as mesmas 8 linhas no SQLite, sem alterações nem duplicação. Os campos persistidos, os totais por área, as rejeições com registro original e motivo, os logs e a correspondência dos CSVs gerados com as evidências versionadas também foram verificados.
+
 ## Como executar
 
 Instale Python **3.10 ou superior**. No terminal, execute:
